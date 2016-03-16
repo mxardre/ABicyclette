@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">OsmTest</string>
+
+    <string name="accessToken">pk.eyJ1IjoibXhhcmRyZSIsImEiOiJjaWlrOHN6b3MwMDQ0dzBtNnlvZzFwd2d4In0.XwAfPuz0UHFPXWeWr4UG0g</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_location">Position</string>
+    <string name="action_removeMarker">remove marker</string>
+    <string name="action_station">station display</string>
+
+    removeMarker
+</resources>
