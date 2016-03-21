@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OsmTest</string>
+    <string name="app_name">ABicyclette</string>
 
     <string name="accessToken">pk.eyJ1IjoibXhhcmRyZSIsImEiOiJjaWlrOHN6b3MwMDQ0dzBtNnlvZzFwd2d4In0.XwAfPuz0UHFPXWeWr4UG0g</string>
 
@@ -8,6 +8,12 @@
     <string name="action_location">Position</string>
     <string name="action_removeMarker">remove marker</string>
     <string name="action_station">station display</string>
+    <string name="drawerOpen">Open Nav Drawer</string>
+    <string name="drawerClose">Close Nav Drawer</string>
+    <string name="appName">testOSM</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
     removeMarker
 </resources>
