@@ -50,8 +50,8 @@ public class MainActivity extends ActionBarActivity {
         // Set the list's click listener
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                R.drawable.ic_drawer, R.string.drawerOpen, R.string.drawerClose) {
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,R.drawable.ic_drawer, R.string.drawerOpen, R.string.drawerClose)
+        {
 
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
