@@ -42,7 +42,8 @@ public class MainFragment extends Fragment {
     SpriteFactory spriteFactory =null;
     Sprite icon =null;
     Drawable drawable = null;
-    ImageButton imageButton;
+    Location location = null;
+    ImageButton buttonCenter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -51,14 +52,16 @@ public class MainFragment extends Fragment {
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
 
-        LocationManager locationManager;
 
 
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_main, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
+
+
 
         /** Create a mapView and give it some properties */
-        MapView mapView = (MapView) view.findViewById(R.id.mapview);
+        MapView mapView = (MapView) rootView.findViewById(R.id.mapview);
         mapView.setStyleUrl(Style.MAPBOX_STREETS);
         mapView.setCenterCoordinate(new LatLng(48.866667, 2.333333));
         mapView.setZoomLevel(11);
@@ -67,17 +70,19 @@ public class MainFragment extends Fragment {
 
 
         /* location manager */
-        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-        Location location = null;
+        LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
 
         //find the last position
         for (String provider : locationManager.getProviders(true)) {
             location = locationManager.getLastKnownLocation(provider);
             if (location != null) {
-                locationManager.requestLocationUpdates(provider, 1000, 0, locationListener);
                 break;
             }
         }
+
+        //Listener for the button which center the map on the known position
+        addListenerOnButton(rootView, location);
+        buttonCenter.performClick();
 
         //check if provider are enabled
         boolean gps_enabled = false;
@@ -136,21 +141,7 @@ public class MainFragment extends Fragment {
             toast.show();
         }
 
-        imageButton = (ImageButton) view.findViewById(R.id.CenterPosition);
-        if (imageButton != null)
-        {
-            addListenerOnButton(imageButton, location);
-        }
-        else
-        {
-            Context context = getContext();
-            CharSequence text = "Image button null";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
-
-        return view;
+        return rootView;
 
     }
 
@@ -202,25 +193,43 @@ public class MainFragment extends Fragment {
         public void onProviderDisabled(String provider) {}
     };
 
-    public void addListenerOnButton( ImageButton imageButton, final Location location) {
+    public void addListenerOnButton(final View view, final Location location) {
 
-        imageButton.setOnClickListener(new View.OnClickListener(){
+        buttonCenter = (ImageButton) view.findViewById(R.id.CenterPosition);
 
+        buttonCenter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                View view= getView().findViewById(R.id.fragment_main);
-                MapView mapView = (MapView) view.findViewById(R.id.mapview);
+
+               MapView mapView = (MapView) view.findViewById(R.id.mapview);
+/*
+
+                double lat=location.getLatitude();
+                double lng=location.getLongitude();
+
+                if (markerPosition != null)
+                {markerPosition.remove();}
+
+
+                */
+/** Use SpriteFactory, Drawable, and Sprite to load our marker icon
+                 * and assign it to a marker*//*
+
+                spriteFactory = mapView.getSpriteFactory();
+                drawable= ContextCompat.getDrawable(getActivity(), R.drawable.ic_my_location_black_24dp);
+                icon = spriteFactory.fromDrawable(drawable);
+
+                markerPosition= mapView.addMarker(new MarkerOptions()
+                        .position(new LatLng(lat, lng))
+                        .snippet("You are here")
+                        .icon(icon));
+*/
+
                 mapView.setZoomLevel(14);
-                mapView.setCenterCoordinate(new LatLng(location.getLatitude(),location.getLongitude()));
-
-                Context context = getContext();
-                CharSequence text = "Update position";
-                int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
+                mapView.setCenterCoordinate(new LatLng(location.getLatitude(), location.getLongitude()));
             }
-
         });
+
     }
 }
