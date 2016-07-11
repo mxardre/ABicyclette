@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     xmlns:mapbox="http://schemas.android.com/apk/res-auto">
 
-    <com.mapbox.mapboxsdk.views.MapView
+    <com.mapbox.mapboxsdk.maps.MapView
         android:id="@+id/velibMarker"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

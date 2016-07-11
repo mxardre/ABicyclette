@@ -13,6 +13,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.mapbox.mapboxsdk.MapboxAccountManager;
+
 import java.util.ArrayList;
 
 
@@ -30,15 +32,19 @@ public class MainActivity extends ActionBarActivity  {
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        //activate the account manager
+        MapboxAccountManager.start(this, getString(R.string.accessToken));
         setContentView(R.layout.activity_main);
+
+
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
+
         // Set the adapter for the list view
         testFragmentNames = new ArrayList<String>();
-        testFragmentNames.add("Main view");
-        testFragmentNames.add("Velib position");
+        testFragmentNames.add("Map");
 
         mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, testFragmentNames));
         // Set the list's click listener
@@ -68,7 +74,7 @@ public class MainActivity extends ActionBarActivity  {
     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     getSupportActionBar().setHomeButtonEnabled(true);
 
-    // Set MainTestFragment
+    // Set MainTestFragment velib
     selectItem(0);
 
     }
@@ -97,7 +103,7 @@ public class MainActivity extends ActionBarActivity  {
                 fragment = new MainFragment();
                 break;
             case 1:
-                fragment = new VelibMarkerFragment();
+                fragment = new MainFragment();
                 break;
             default:
                 fragment = new MainFragment();
