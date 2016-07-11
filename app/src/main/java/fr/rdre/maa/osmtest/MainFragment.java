@@ -66,10 +66,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
         //48.85341, 2.3488 paris position
         LatLng latLng = new LatLng(48.85341, 2.3488);
-  
+
         mapboxMap.setCameraPosition(new CameraPosition.Builder()
                 .target(latLng)
-                .zoom(20)
+                .zoom(10)
                 .build());
 
 
@@ -191,9 +191,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         protected void onPostExecute(String stationJsonStr) {
 
 
-            super.onPostExecute(stationJsonStr);
             //add the marker in background to avoid the freezing of the app
-
 
             // These are the names of the JSON objects that need to be extracted.
             final String ODP_nhits = "nhits";
@@ -213,7 +211,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             Log.v("EXECUTE", "before try");
 
             try {
-                Log.v("EXECUTE", "after try");
                 stationJson = new JSONObject(stationJsonStr);
                 stationArray = stationJson.getJSONArray(ODP_records);
 
@@ -221,11 +218,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 double lon = 0;
                 int stationNumber = 0;
 
-                Log.v("EXECUTE", "before for loop " +String.valueOf(stationArray.length()));
 
                 for (int i = 0; i < stationArray.length(); i++) {
 
-                    Log.v("EXECUTE", "in for loop " +String.valueOf(i));
 
                     //Get JSON object of the station
                     JSONObject stationRecords = stationArray.getJSONObject(i);
@@ -242,14 +237,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                     lat = coordinateObject.getDouble(0);
                     lon = coordinateObject.getDouble(1);
 
-
-                    if (stationNumber != 0) {
-                        Log.v("EXECUTE", "stationNumber " + String.valueOf(stationNumber));
-
-                    } else {
-                        Log.v("EXECUTE", "stationNumber null ");
-                    }
-
+                    
 
                     LatLng position = new LatLng(lon, lat);
                     mapboxMap.addMarker(new MarkerOptions()
