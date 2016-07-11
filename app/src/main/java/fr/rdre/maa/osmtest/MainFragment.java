@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
@@ -30,8 +31,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 
-
-
 public class MainFragment extends Fragment implements OnMapReadyCallback {
 
 
@@ -43,7 +42,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
         View view = inflater.inflate(R.layout.fragment_velib_marker, container, false);
 
-
+        mapView = (MapView) view.findViewById(R.id.velibMarker);
         mapView.getMapAsync(this);
 
         mapView = (MapView) view.findViewById(R.id.velibMarker);
@@ -58,7 +57,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         Toast.makeText(context, "VelibMarker", Toast.LENGTH_SHORT).show();
 
 
-
         return view;
     }
 
@@ -68,11 +66,12 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
         //48.85341, 2.3488 paris position
         LatLng latLng = new LatLng(48.85341, 2.3488);
-        mapboxMap.animateCamera(com.mapbox.mapboxsdk.camera.CameraUpdateFactory.newCameraPosition(new com.mapbox.mapboxsdk.camera.CameraPosition.Builder()
-                        .target(latLng)
-                        .zoom(10)
-                        .build()),
-                10000);
+  
+        mapboxMap.setCameraPosition(new CameraPosition.Builder()
+                .target(latLng)
+                .zoom(20)
+                .build());
+
 
         // Load and Draw the GeoJSON
         new StationPosition().execute();
@@ -191,6 +190,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         @Override
         protected void onPostExecute(String stationJsonStr) {
 
+
             super.onPostExecute(stationJsonStr);
             //add the marker in background to avoid the freezing of the app
 
@@ -201,44 +201,63 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             final String ODP_geometry = "geometry";
             final String ODP_coordinates = "coordinates";
             final String ODP_fields = "fields";
-            final String ODP_number = "status";
+            final String ODP_number = "number";
             //final String ODP_available_stands = "available_bike_stands";
             //final String ODP_available_bikes = "available_bikes";
             //final String ODP_status = "status";
 
 
             JSONObject stationJson = null;
-
             JSONArray stationArray = null;
+
+            Log.v("EXECUTE", "before try");
+
             try {
+                Log.v("EXECUTE", "after try");
                 stationJson = new JSONObject(stationJsonStr);
                 stationArray = stationJson.getJSONArray(ODP_records);
 
-            double lat = 0;
+                double lat = 0;
                 double lon = 0;
+                int stationNumber = 0;
 
-            for (int i = 0; i < stationArray.length(); i++) {
-                //Get JSON object of the station
-                JSONObject stationRecords = stationArray.getJSONObject(i);
-                JSONObject stationGeometry = stationRecords.getJSONObject(ODP_geometry);
-                JSONObject stationFields = stationRecords.getJSONObject(ODP_fields);
+                Log.v("EXECUTE", "before for loop " +String.valueOf(stationArray.length()));
 
-                int stationNumber = stationFields.getInt(ODP_number);
+                for (int i = 0; i < stationArray.length(); i++) {
 
-                //int availableStands = stationFields.getInt(ODP_available_stands);
-                //String stationStatus = stationFields.getString(ODP_status);
+                    Log.v("EXECUTE", "in for loop " +String.valueOf(i));
 
-                JSONArray coordinateObject = stationGeometry.getJSONArray(ODP_coordinates);
+                    //Get JSON object of the station
+                    JSONObject stationRecords = stationArray.getJSONObject(i);
+                    JSONObject stationGeometry = stationRecords.getJSONObject(ODP_geometry);
+                    JSONObject stationFields = stationRecords.getJSONObject(ODP_fields);
 
-                lat = coordinateObject.getDouble(0);
-                lon = coordinateObject.getDouble(1);
+                    stationNumber = stationFields.getInt(ODP_number);
 
-                LatLng position = new LatLng(lon, lat);
-                mapboxMap.addMarker(new MarkerOptions()
-                                .position(position)
-                                .title(String.valueOf(stationNumber))
-                );
-            }
+                    //int availableStands = stationFields.getInt(ODP_available_stands);
+                    //String stationStatus = stationFields.getString(ODP_status);
+
+                    JSONArray coordinateObject = stationGeometry.getJSONArray(ODP_coordinates);
+
+                    lat = coordinateObject.getDouble(0);
+                    lon = coordinateObject.getDouble(1);
+
+
+                    if (stationNumber != 0) {
+                        Log.v("EXECUTE", "stationNumber " + String.valueOf(stationNumber));
+
+                    } else {
+                        Log.v("EXECUTE", "stationNumber null ");
+                    }
+
+
+                    LatLng position = new LatLng(lon, lat);
+                    mapboxMap.addMarker(new MarkerOptions()
+                                    .position(position)
+                                    .title(String.valueOf(stationNumber))
+                    );
+                }
+
 
             } catch (JSONException e) {
                 e.printStackTrace();
