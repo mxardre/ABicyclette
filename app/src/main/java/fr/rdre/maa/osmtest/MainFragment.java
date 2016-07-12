@@ -4,13 +4,14 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
+import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.constants.Style;
@@ -36,6 +37,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
     MapView mapView = null;
     private MapboxMap mapboxMap;
+    public Marker markerUpdate=null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -54,14 +56,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         stationPosition.execute();
 
         Context context = getContext();
-        Toast.makeText(context, "VelibMarker", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(context, "VelibMarker", Toast.LENGTH_SHORT).show();
 
 
         return view;
     }
 
     @Override
-    public void onMapReady(MapboxMap mapboxMap) {
+    public void onMapReady(final MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
 
         //48.85341, 2.3488 paris position
@@ -73,8 +75,22 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 .build());
 
 
-        // Load and Draw the GeoJSON
+        // Load Marker
         new StationPosition().execute();
+
+        // Put listner on marker
+        mapboxMap.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(@NonNull Marker marker) {
+
+                Log.v("Listener", "STATION NUMBER " + marker.getTitle());
+                markerUpdate=marker;
+                new StationUpdate().execute();
+
+                marker.showInfoWindow(mapboxMap,mapView);
+                return true;
+            }
+        });
     }
 
 
@@ -108,6 +124,163 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         mapView.onDestroy();
     }
 
+
+    public class StationUpdate extends AsyncTask<Void, Void, String>
+    {
+
+
+        @Override
+        protected String doInBackground(Void... args) {
+
+
+
+            //String formated in Json containing the query
+            String stationUpdateJson="";
+            String station_number=markerUpdate.getTitle();
+            String snippetStr="";
+
+            // These two need to be declared outside the try/catch
+            // so that they can be closed in the finally block.
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
+
+            String LOG_TAG = "ASYNC TASK 2";
+
+
+            Log.v(LOG_TAG, "STATION NUMBER " +station_number);
+
+
+            try {
+                // Construct the URL for the ABicylette query
+                // The data are refresh in real time
+                String VELIB_BASE_URL = "http://public.opendatasoft.com/api/records/1.0/search/?dataset=jcdecaux_bike_data&facet=banking&facet=bonus&facet=status&facet=contract_name&refine.contract_name=Paris";
+                VELIB_BASE_URL = VELIB_BASE_URL +  "&refine.number=" + station_number;
+
+                Uri builtUri = Uri.parse(VELIB_BASE_URL).buildUpon().build();
+
+                URL url = new URL(builtUri.toString());
+
+
+                Log.v(LOG_TAG, "Built URI 2 " + builtUri.toString());
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+
+                //Read the stream
+                InputStream stream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+                if (stream == null) {
+                    // Nothing to do.b
+                    return null;
+                }
+                reader = new BufferedReader(new InputStreamReader(stream));
+
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
+                    // But it does make debugging a *lot* easier if you print out the completed
+                    // buffer for debugging.
+                    buffer.append(line + "\n");
+                }
+
+                if (buffer.length() == 0) {
+                    // Stream was empty.  No point in parsing.
+                    return null;
+                }
+                stationUpdateJson = buffer.toString();
+                Log.v(LOG_TAG, "OPEN_DATA_API: " + stationUpdateJson);
+
+            } catch (IOException e) {
+                Log.e("Tag", "Error ", e);
+                // If the code didn't successfully get the station data, there's no point in attemping
+                // to parse it.
+                return null;
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (final IOException e) {
+                        Log.e(LOG_TAG, "Error closing stream", e);
+                    }
+                }
+
+            }
+
+
+            //update the marker in background to avoid the freezing of the app
+
+            // These are the names of the JSON objects that need to be extracted.
+            final String ODP_nhits = "nhits";
+            final String ODP_records = "records";
+            final String ODP_geometry = "geometry";
+            final String ODP_coordinates = "coordinates";
+            final String ODP_fields = "fields";
+            final String ODP_available_stands = "available_bike_stands";
+            final String ODP_available_bikes = "available_bikes";
+            final String ODP_status = "status";
+
+
+            JSONObject stationJson = null;
+            JSONArray stationArray = null;
+
+            Log.v("EXECUTE 2", "before try");
+
+            try {
+                stationJson = new JSONObject(stationUpdateJson);
+
+                stationArray = stationJson.getJSONArray(ODP_records);
+
+
+                //Get JSON object of the station
+                JSONObject stationRecords = stationArray.getJSONObject(0);
+                JSONObject stationFields = stationRecords.getJSONObject(ODP_fields);
+
+
+                int availableBikes = stationFields.getInt(ODP_available_bikes);
+                int availableStands = stationFields.getInt(ODP_available_stands);
+                String stationStatus = stationFields.getString(ODP_status);
+
+                Log.v("EXECUTE 2", "SNIPPET " +"\n Open : "+ stationStatus +
+                        "\n Bikes : "+ String.valueOf(availableBikes) +
+                        "\n Stands : " + String.valueOf(availableStands));
+
+
+
+
+                snippetStr="Open : " + stationStatus +
+                        "\n Bikes : " + String.valueOf(availableBikes) +
+                        "\n Stands : " + String.valueOf(availableStands);
+
+
+
+
+
+            } catch (JSONException e) {
+                Log.v("EXECUTE 2", "ERROR UPDATE SNIPPET");
+                e.printStackTrace();
+            }
+
+
+
+            return snippetStr;
+        }
+
+        @Override
+        protected void onPostExecute(String snippetStr)
+        {
+          markerUpdate.setSnippet(snippetStr);
+
+        }
+
+
+    }
+
     public class StationPosition extends AsyncTask<Void, Void, String> {
 
 
@@ -127,7 +300,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
             try {
                 // Construct the URL for the ABicylette query
-                // Possible parameters are avaiable at OWM's forecast API page, at
+                // The data are refresh every minute in this api. To get live data use jcdecaux developper api
                 final String VELIB_BASE_URL = "http://opendata.paris.fr/api/records/1.0/search/?dataset=stations-velib-disponibilites-en-temps-reel&rows=2000&start=1&sort=-number&facet=banking&facet=bonus&facet=status&facet=contract_name";
                 Uri builtUri = Uri.parse(VELIB_BASE_URL).buildUpon().build();
 
@@ -237,7 +410,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                     lat = coordinateObject.getDouble(0);
                     lon = coordinateObject.getDouble(1);
 
-                    
+
 
                     LatLng position = new LatLng(lon, lat);
                     mapboxMap.addMarker(new MarkerOptions()
