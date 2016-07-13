@@ -85,9 +85,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
                 Log.v("Listener", "STATION NUMBER " + marker.getTitle());
                 markerUpdate=marker;
+
                 new StationUpdate().execute();
 
-                marker.showInfoWindow(mapboxMap,mapView);
+                markerUpdate.showInfoWindow(mapboxMap, mapView);
                 return true;
             }
         });
@@ -276,6 +277,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         {
           markerUpdate.setSnippet(snippetStr);
 
+
         }
 
 
@@ -367,15 +369,11 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             //add the marker in background to avoid the freezing of the app
 
             // These are the names of the JSON objects that need to be extracted.
-            final String ODP_nhits = "nhits";
             final String ODP_records = "records";
             final String ODP_geometry = "geometry";
             final String ODP_coordinates = "coordinates";
             final String ODP_fields = "fields";
             final String ODP_number = "number";
-            //final String ODP_available_stands = "available_bike_stands";
-            //final String ODP_available_bikes = "available_bikes";
-            //final String ODP_status = "status";
 
 
             JSONObject stationJson = null;
@@ -416,6 +414,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                     mapboxMap.addMarker(new MarkerOptions()
                                     .position(position)
                                     .title(String.valueOf(stationNumber))
+                                    .snippet("Open : ..." +
+                                            "\n Bikes : ..." +
+                                            "\n Stands : ..." )
+
                     );
                 }
 
