@@ -1,6 +1,8 @@
 package fr.rdre.maa.osmtest;
 
-import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,6 +13,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.mapbox.mapboxsdk.annotations.Icon;
+import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
@@ -30,6 +34,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainFragment extends Fragment implements OnMapReadyCallback {
@@ -38,6 +44,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
     MapView mapView = null;
     private MapboxMap mapboxMap;
     public Marker markerUpdate=null;
+    public List<Marker> markerList=new ArrayList<>();
+    double zoomOld=10.;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -55,12 +63,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         StationPosition stationPosition = new StationPosition();
         stationPosition.execute();
 
-        Context context = getContext();
+        //Context context = getContext();
         //Toast.makeText(context, "VelibMarker", Toast.LENGTH_SHORT).show();
 
 
         return view;
     }
+
+
 
     @Override
     public void onMapReady(final MapboxMap mapboxMap) {
@@ -71,14 +81,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
         mapboxMap.setCameraPosition(new CameraPosition.Builder()
                 .target(latLng)
-                .zoom(10)
+                .zoom(zoomOld)
                 .build());
 
 
         // Load Marker
         new StationPosition().execute();
 
-        // Put listner on marker
+        // Put listener on marker
         mapboxMap.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(@NonNull Marker marker) {
@@ -92,6 +102,56 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 return true;
             }
         });
+
+        mapboxMap.setOnCameraChangeListener(new MapboxMap.OnCameraChangeListener() {
+
+
+            @Override
+            public void onCameraChange(CameraPosition position) {
+
+                if (zoomOld * 0.9 > position.zoom || position.zoom > zoomOld * 1.1) {
+                    zoomOld = position.zoom;
+                    if (markerList.size() > 0) {
+
+                        //get the actual marker
+                        Marker marker = markerList.get(0);
+                        Icon icon = marker.getIcon();
+
+                        //get the bitmap
+                        Bitmap b = icon.getBitmap();
+                        Bitmap bhalfsize = Bitmap.createScaledBitmap(b, b.getWidth() / 2, b.getHeight() / 2, false);
+
+
+                        Log.v("ZOOM", String.valueOf(bhalfsize.getWidth()));
+
+                        // Create an Icon object for the marker to use
+                        IconFactory iconFactory = IconFactory.getInstance(getContext());
+                        Drawable drawable=getResources().getDrawable(R.drawable.ic_my_location_black_24dp);
+                        Bitmap bitmap=((BitmapDrawable) drawable).getBitmap();
+                        Drawable d = new BitmapDrawable(getResources(), Bitmap.createScaledBitmap(bitmap, 50, 50, true));
+                        icon= iconFactory.fromDrawable(d);
+
+                        //icon = iconFactory.fromBitmap(bhalfsize);
+
+
+                        for (int i = 0; i < markerList.size(); i++) {
+
+                            Marker markerNew = markerList.get(i);
+                            markerNew.setIcon(icon);
+                            Log.v("ZOOM", String.valueOf(marker.getPosition()));
+
+
+                            marker.setIcon(icon);
+
+                        }
+
+
+                    }
+                }
+            }
+        });
+
+
     }
 
 
@@ -217,10 +277,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             //update the marker in background to avoid the freezing of the app
 
             // These are the names of the JSON objects that need to be extracted.
-            final String ODP_nhits = "nhits";
             final String ODP_records = "records";
-            final String ODP_geometry = "geometry";
-            final String ODP_coordinates = "coordinates";
             final String ODP_fields = "fields";
             final String ODP_available_stands = "available_bike_stands";
             final String ODP_available_bikes = "available_bikes";
@@ -389,6 +446,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 double lon = 0;
                 int stationNumber = 0;
 
+                if( markerList==null){}
+                else
+                {markerList.clear();}
 
                 for (int i = 0; i < stationArray.length(); i++) {
 
@@ -411,14 +471,22 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
 
                     LatLng position = new LatLng(lon, lat);
-                    mapboxMap.addMarker(new MarkerOptions()
+
+                    // Create an Icon object for the marker to use
+                    IconFactory iconFactory = IconFactory.getInstance(getContext());
+                    Icon icon= iconFactory.fromDrawable(getResources().getDrawable(R.drawable.ic_my_location_black_24dp));
+
+                    Marker markerTmp = mapboxMap.addMarker(new MarkerOptions()
+                                    .setIcon(icon)
                                     .position(position)
                                     .title(String.valueOf(stationNumber))
                                     .snippet("Open : ..." +
                                             "\n Bikes : ..." +
-                                            "\n Stands : ..." )
-
+                                            "\n Stands : ...")
                     );
+
+
+                    markerList.add(markerTmp);
                 }
 
 
