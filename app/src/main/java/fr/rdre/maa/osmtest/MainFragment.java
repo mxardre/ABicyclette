@@ -127,11 +127,11 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
                         // Create an Icon object for the marker to use
                         IconFactory iconFactory = IconFactory.getInstance(getContext());
-                        Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_my_location_black_24dp);
+                        Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_room_black_24dp);
                         Bitmap bitmap=((BitmapDrawable) drawable).getBitmap();
 
-                        int width= (int) (bitmap.getWidth() * (zoomOld-10)*.2);
-                        int height= (int) (bitmap.getHeight() * (zoomOld-10)*.2);
+                        int width= (int) (bitmap.getWidth() * (zoomOld-10)*.22);
+                        int height= (int) (bitmap.getHeight() * (zoomOld-10)*.22);
 
                         if (width>0 && height>0)
                         {
@@ -504,7 +504,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                     //Icon icon= iconFactory.fromDrawable(getResources().getDrawable(R.drawable.ic_my_location_black_24dp));
 
 
-                    Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_my_location_black_24dp);
+                    Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_room_black_24dp);
                     Bitmap bitmap=((BitmapDrawable) drawable).getBitmap();
                     Bitmap scale=Bitmap.createScaledBitmap(bitmap, (int) (bitmap.getWidth() * .1), (int) (bitmap.getHeight() * .1), true);
                     Drawable d = new BitmapDrawable(getResources(), scale);
