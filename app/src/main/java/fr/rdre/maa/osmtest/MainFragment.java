@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -109,42 +110,68 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onCameraChange(CameraPosition position) {
 
-                if (zoomOld * 0.9 > position.zoom || position.zoom > zoomOld * 1.1) {
+                if (zoomOld * 0.99 > position.zoom || position.zoom > zoomOld * 1.01) {
                     zoomOld = position.zoom;
                     if (markerList.size() > 0) {
 
                         //get the actual marker
                         Marker marker = markerList.get(0);
-                        Icon icon = marker.getIcon();
+                        //Icon icon = marker.getIcon();
 
                         //get the bitmap
-                        Bitmap b = icon.getBitmap();
-                        Bitmap bhalfsize = Bitmap.createScaledBitmap(b, b.getWidth() / 2, b.getHeight() / 2, false);
+                        //Bitmap b = icon.getBitmap();
+                        //Bitmap bhalfsize = Bitmap.createScaledBitmap(b, b.getWidth() / 2, b.getHeight() / 2, false);
 
 
-                        Log.v("ZOOM", String.valueOf(bhalfsize.getWidth()));
+                        //Log.v("ZOOM", String.valueOf(bhalfsize.getWidth()));
 
                         // Create an Icon object for the marker to use
                         IconFactory iconFactory = IconFactory.getInstance(getContext());
-                        Drawable drawable=getResources().getDrawable(R.drawable.ic_my_location_black_24dp);
+                        Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_my_location_black_24dp);
                         Bitmap bitmap=((BitmapDrawable) drawable).getBitmap();
-                        Drawable d = new BitmapDrawable(getResources(), Bitmap.createScaledBitmap(bitmap, 50, 50, true));
-                        icon= iconFactory.fromDrawable(d);
 
-                        //icon = iconFactory.fromBitmap(bhalfsize);
+                        int width= (int) (bitmap.getWidth() * (zoomOld-10)*.2);
+                        int height= (int) (bitmap.getHeight() * (zoomOld-10)*.2);
+
+                        if (width>0 && height>0)
+                        {
+                            Bitmap scale=Bitmap.createScaledBitmap(bitmap, width , height, true);
+
+                            Log.v("ZOOM", String.valueOf(zoomOld)+" "+String.valueOf((zoomOld-10)*.2));
+                            Log.v("ZOOM markerList", String.valueOf(markerList.size()));
+
+                            Drawable d = new BitmapDrawable(getResources(), scale);
+
+                            Icon icon= iconFactory.fromDrawable(d);
+
+                            //icon = iconFactory.fromBitmap(bhalfsize);
 
 
-                        for (int i = 0; i < markerList.size(); i++) {
+                            for (int i = 0; i < markerList.size(); i++) {
 
-                            Marker markerNew = markerList.get(i);
-                            markerNew.setIcon(icon);
-                            Log.v("ZOOM", String.valueOf(marker.getPosition()));
+                                Marker markerOld = markerList.get(i);
+                                Marker markerNew = mapboxMap.addMarker(new MarkerOptions()
+                                        .setIcon(icon)
+                                        .position(markerOld.getPosition())
+                                        .title(markerOld.getTitle())
+                                        .snippet(markerOld.getSnippet()));
 
+                                markerOld.remove();
+                                markerList.set(i, markerNew);
 
-                            marker.setIcon(icon);
+                            }
 
                         }
+                        else
+                        {
+                            for (int i = 0; i < markerList.size(); i++) {
 
+                                Marker markerOld = markerList.get(i);
+                                markerOld.remove();
+                                Log.v("ZOOM", "remove marker");
+
+                            }
+                        }
 
                     }
                 }
@@ -474,7 +501,16 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
                     // Create an Icon object for the marker to use
                     IconFactory iconFactory = IconFactory.getInstance(getContext());
-                    Icon icon= iconFactory.fromDrawable(getResources().getDrawable(R.drawable.ic_my_location_black_24dp));
+                    //Icon icon= iconFactory.fromDrawable(getResources().getDrawable(R.drawable.ic_my_location_black_24dp));
+
+
+                    Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_my_location_black_24dp);
+                    Bitmap bitmap=((BitmapDrawable) drawable).getBitmap();
+                    Bitmap scale=Bitmap.createScaledBitmap(bitmap, (int) (bitmap.getWidth() * .1), (int) (bitmap.getHeight() * .1), true);
+                    Drawable d = new BitmapDrawable(getResources(), scale);
+
+                    Icon icon= iconFactory.fromDrawable(d);
+
 
                     Marker markerTmp = mapboxMap.addMarker(new MarkerOptions()
                                     .setIcon(icon)
