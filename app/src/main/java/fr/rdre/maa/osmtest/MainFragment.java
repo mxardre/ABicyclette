@@ -3,6 +3,7 @@ package fr.rdre.maa.osmtest;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -37,8 +38,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-
 public class MainFragment extends Fragment implements OnMapReadyCallback {
 
 
@@ -46,7 +45,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
     private MapboxMap mapboxMap;
     public Marker markerUpdate=null;
     public List<Marker> markerList=new ArrayList<>();
-    double zoomOld=10.;
+    double zoom=10.;
+
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -78,12 +80,13 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         this.mapboxMap = mapboxMap;
 
         //48.85341, 2.3488 paris position
-        LatLng latLng = new LatLng(48.85341, 2.3488);
+        final LatLng[] latLng = {new LatLng(48.85341, 2.3488)};
 
         mapboxMap.setCameraPosition(new CameraPosition.Builder()
-                .target(latLng)
-                .zoom(zoomOld)
+                .target(latLng[0])
+                .zoom(zoom)
                 .build());
+
 
 
         // Load Marker
@@ -100,6 +103,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 new StationUpdate().execute();
 
                 markerUpdate.showInfoWindow(mapboxMap, mapView);
+
                 return true;
             }
         });
@@ -110,8 +114,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onCameraChange(CameraPosition position) {
 
-                if (zoomOld * 0.99 > position.zoom || position.zoom > zoomOld * 1.01) {
-                    zoomOld = position.zoom;
+                if (zoom * 0.99 > position.zoom || position.zoom > zoom * 1.01) {
+                    zoom = position.zoom;
                     if (markerList.size() > 0) {
 
                         //get the actual marker
@@ -130,14 +134,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                         Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_room_black_24dp);
                         Bitmap bitmap=((BitmapDrawable) drawable).getBitmap();
 
-                        int width= (int) (bitmap.getWidth() * (zoomOld-10)*.22);
-                        int height= (int) (bitmap.getHeight() * (zoomOld-10)*.22);
+                        int width= (int) (bitmap.getWidth() * (zoom-10)*.22);
+                        int height= (int) (bitmap.getHeight() * (zoom-10)*.22);
 
                         if (width>0 && height>0)
                         {
                             Bitmap scale=Bitmap.createScaledBitmap(bitmap, width , height, true);
 
-                            Log.v("ZOOM", String.valueOf(zoomOld)+" "+String.valueOf((zoomOld-10)*.2));
+                            Log.v("ZOOM", String.valueOf(zoom)+" "+String.valueOf((zoom-10)*.2));
                             Log.v("ZOOM markerList", String.valueOf(markerList.size()));
 
                             Drawable d = new BitmapDrawable(getResources(), scale);
@@ -149,15 +153,39 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
                             for (int i = 0; i < markerList.size(); i++) {
 
-                                Marker markerOld = markerList.get(i);
-                                Marker markerNew = mapboxMap.addMarker(new MarkerOptions()
-                                        .setIcon(icon)
-                                        .position(markerOld.getPosition())
-                                        .title(markerOld.getTitle())
-                                        .snippet(markerOld.getSnippet()));
 
-                                markerOld.remove();
-                                markerList.set(i, markerNew);
+                                Marker markerUpdated = markerList.get(i);
+                                markerUpdated.setIcon(icon);
+
+
+                                if(zoom>14) {
+
+                                    LatLng mapLocation = mapboxMap.getCameraPosition().target;
+                                    double mapLat = mapLocation.getLatitude();
+                                    double mapLon = mapLocation.getLongitude();
+
+                                    LatLng markerLocation = markerUpdated.getPosition();
+                                    double markerLat = markerLocation.getLatitude();
+                                    double markerLon = markerLocation.getLongitude();
+
+                                    //affiche les snippets si les marker sont a cote du centre de la carte
+                                    //calcul la distance entre les points
+                                    float [] dist={1000};
+                                    Location.distanceBetween(markerLat, markerLon, mapLat, mapLon, dist) ;
+
+
+                                    if(dist[0]<500)
+                                    {
+
+                                        markerUpdate=markerUpdated;
+                                        new StationUpdate().execute();
+                                        markerUpdate.showInfoWindow(mapboxMap, mapView);
+
+                                    }
+                                }
+                                if(zoom<14) {
+                                    markerUpdated.hideInfoWindow();
+                                }
 
                             }
 
@@ -172,6 +200,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
                             }
                         }
+
+
 
                     }
                 }
@@ -331,16 +361,15 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 int availableStands = stationFields.getInt(ODP_available_stands);
                 String stationStatus = stationFields.getString(ODP_status);
 
-                Log.v("EXECUTE 2", "SNIPPET " +"\n Open : "+ stationStatus +
-                        "\n Bikes : "+ String.valueOf(availableBikes) +
-                        "\n Stands : " + String.valueOf(availableStands));
+                Log.v("EXECUTE 2", "SNIPPET " +
+                        " Bikes : Stands\n"+ String.valueOf(availableBikes) +
+                        "  " + String.valueOf(availableStands));
 
 
 
 
-                snippetStr="Open : " + stationStatus +
-                        "\n Bikes : " + String.valueOf(availableBikes) +
-                        "\n Stands : " + String.valueOf(availableStands);
+                snippetStr=" Bikes \\ Stands\n"+
+                        "   "+ String.valueOf(availableBikes) +  "          " + String.valueOf(availableStands);
 
 
 
@@ -359,8 +388,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         @Override
         protected void onPostExecute(String snippetStr)
         {
-          markerUpdate.setSnippet(snippetStr);
-
+            markerUpdate.setSnippet(snippetStr);
 
         }
 
@@ -521,8 +549,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                                             "\n Stands : ...")
                     );
 
-
                     markerList.add(markerTmp);
+
                 }
 
 
