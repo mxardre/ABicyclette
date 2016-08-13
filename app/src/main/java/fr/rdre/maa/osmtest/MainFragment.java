@@ -8,7 +8,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -563,29 +562,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
     }
 
-    private Drawable createMarkerIcon(Drawable backgroundImage, String text) {
-
-        Bitmap canvasBitmap = Bitmap.createBitmap( backgroundImage.getIntrinsicWidth(), backgroundImage.getIntrinsicHeight(),
-                Bitmap.Config.ARGB_8888);
-        // Create a canvas, that will draw on to canvasBitmap.
-        Canvas imageCanvas = new Canvas(canvasBitmap);
-
-        // Set up the paint for use with our Canvas
-        Paint imagePaint = new Paint();
-        imagePaint.setTextAlign(Paint.Align.CENTER);
-        imagePaint.setTextSize(16);
-
-        // Draw the image to our canvas
-        backgroundImage.draw(imageCanvas);
-
-        // Draw the text on top of our image
-        imageCanvas.drawText(text, backgroundImage.getIntrinsicWidth()/2, backgroundImage.getIntrinsicHeight() / 2, imagePaint);
-
-        // Combine background and text to a LayerDrawable
-        LayerDrawable layerDrawable = new LayerDrawable(
-                new Drawable[]{backgroundImage, new BitmapDrawable(canvasBitmap)});
-        return layerDrawable;
-    }
 
     private Drawable resizeDrawable(Drawable image, int width, int height) {
         Bitmap b = ((BitmapDrawable)image).getBitmap();
