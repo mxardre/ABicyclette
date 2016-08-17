@@ -45,6 +45,7 @@ public class MainActivity extends ActionBarActivity  {
         // Set the adapter for the list view
         testFragmentNames = new ArrayList<String>();
         testFragmentNames.add("Map");
+        testFragmentNames.add("Favorites");
 
         mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, testFragmentNames));
         // Set the list's click listener
@@ -103,7 +104,7 @@ public class MainActivity extends ActionBarActivity  {
                 fragment = new MainFragment();
                 break;
             case 1:
-                fragment = new MainFragment();
+                fragment = new PreferedFragment();
                 break;
             default:
                 fragment = new MainFragment();

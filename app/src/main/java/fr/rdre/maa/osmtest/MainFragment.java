@@ -8,13 +8,11 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +25,7 @@ import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.geometry.VisibleRegion;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -43,17 +42,20 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.Math.max;
+
 public class MainFragment extends Fragment implements OnMapReadyCallback {
 
 
     MapView mapView = null;
     private MapboxMap mapboxMap;
     public Marker markerUpdate=null;
-    public List<Marker> markerList=new ArrayList<>();
+    public List<MarkerOptions> markerList=new ArrayList<>();
+    public List<String> dataList=new ArrayList<>();
     double zoom=10.;
-
-
-
+    LatLng target=null;
+    Drawable drawableSrc=null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -71,8 +73,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         StationPosition stationPosition = new StationPosition();
         stationPosition.execute();
 
+        Bitmap bitmap = writeOnDrawable(R.drawable.ic_room_black_24dp, " ");
+        drawableSrc=new BitmapDrawable(getResources(), bitmap);
+        Log.v("ZOOM src", String.valueOf(drawableSrc.getIntrinsicWidth())+" "+String.valueOf(drawableSrc.getIntrinsicHeight()));
+
         //Context context = getContext();
         //Toast.makeText(context, "VelibMarker", Toast.LENGTH_SHORT).show();
+
+        //drawableSrc= ContextCompat.getDrawable(getContext(), R.drawable.ic_room_black_24dp);
 
 
         return view;
@@ -119,89 +127,121 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onCameraChange(CameraPosition position) {
 
-                if (zoom * 0.99 > position.zoom || position.zoom > zoom * 1.01) {
+
+                if (target==null)
+                {
+                    target=position.target;
+                }
+
+
+                double targetLat=target.getLatitude();
+                double targetLon=target.getLongitude();
+
+                if (zoom * 0.99 > position.zoom || position.zoom > zoom * 1.01 || targetLat*0.9999>position.target.getLatitude() || position.target.getLatitude()>targetLat*1.0001 || targetLon*0.9999>position.target.getLongitude() || position.target.getLongitude()>targetLon*1.0001 )
+                {
+                    Log.v("TARGET", String.valueOf(targetLat)+" "+String.valueOf(targetLon)+" "+String.valueOf(position.target.getLatitude())+" "+String.valueOf(position.target.getLongitude()));
+
                     zoom = position.zoom;
+                    target=position.target;
                     if (markerList.size() > 0) {
 
                         //get the actual marker
-                        Marker marker = markerList.get(0);
 
                         // Create an Icon object for the marker to use
                         //the icon displays the number of bike and the number stand available
-                        IconFactory iconFactory = IconFactory.getInstance(getContext());
 
-                        Bitmap bitmap= writeOnDrawable(R.drawable.ic_room_black_24dp,"Bikes");
-                        Drawable drawable= new BitmapDrawable(getResources(),bitmap);
-                        int width= (int) (drawable.getIntrinsicWidth() * (zoom-10)*.22);
-                        int height= (int) (drawable.getIntrinsicHeight() * (zoom-10)*.22);
+                        //Bitmap bitmap= writeOnDrawable(R.drawable.ic_room_black_24dp,"Bikes");
+                        //Drawable drawable= new BitmapDrawable(getResources(),bitmap);
 
-                        drawable=resizeDrawable(drawable, width, height);
+                        int width= (int) (drawableSrc.getIntrinsicWidth() * (zoom-10)*.22);
+                        int height= (int) (drawableSrc.getIntrinsicHeight() * (zoom-10)*.22);
 
-                        Log.v("ZOOM", String.valueOf(zoom)+" "+String.valueOf((zoom-10)*.2));
-                        Log.v("ZOOM markerList", String.valueOf(markerList.size()));
-                        //Log.v("ZOOM drawable", String.valueOf(drawable.getIntrinsicWidth())+" "+String.valueOf(drawable.getIntrinsicHeight()));
+
+                        Log.v("ZOOM icon", String.valueOf(width)+" "+String.valueOf(height));
+
+                        //Log.v("ZOOM drawable1", String.valueOf(drawable.getIntrinsicWidth())+" "+String.valueOf(drawable.getIntrinsicHeight()));
 
                         if (width>0 && height>0)
                         {
+
+                            if(width>180)
+                            {
+                                width=180;
+                            }
+                            if(height>155)
+                            {
+                                height=155;
+                            }
+
+                            Log.v("ZOOM", String.valueOf(zoom) + " " + String.valueOf((zoom - 10) * .2));
+                            Log.v("ZOOM markerList", String.valueOf(markerList.size()));
+
+
+                            Drawable drawable=resizeDrawable(drawableSrc, width, height);
+                            IconFactory iconFactory = IconFactory.getInstance(getContext());
+                            Icon iconSrc= iconFactory.fromDrawable(drawable);
+                            Icon icon=iconSrc;
+
                             //Bitmap scale=Bitmap.createScaledBitmap(bitmap, width , height, true);
                             //ScaleDrawable scaledrawable = new ScaleDrawable(drawable, 0, width, height);
 
 
                             //Drawable d = new BitmapDrawable(getResources(), scaledrawable);
 
-                            Icon icon= iconFactory.fromDrawable(drawable);
 
                             //icon = iconFactory.fromBitmap(bhalfsize);
+                            VisibleRegion visibleRegion= mapboxMap.getProjection().getVisibleRegion();
+                            double latNorth=visibleRegion.latLngBounds.getLatNorth();
+                            double latSouth=visibleRegion.latLngBounds.getLatSouth();
+                            double lonWest=visibleRegion.latLngBounds.getLonWest();
+                            double lonEast=visibleRegion.latLngBounds.getLonEast();
 
 
                             for (int i = 0; i < markerList.size(); i++) {
 
+                                MarkerOptions markerUpdated = markerList.get(i);
 
-                                Marker markerUpdated = markerList.get(i);
-                                markerUpdated.setIcon(icon);
+                                double lat= markerUpdated.getPosition().getLatitude();
+                                double lon= markerUpdated.getPosition().getLongitude();
 
+                                //mapboxMap.removeMarker(markerUpdated.getMarker());
 
-                                if(zoom>14) {
+                                markerUpdated.getMarker().remove();
 
-                                    LatLng mapLocation = mapboxMap.getCameraPosition().target;
-                                    double mapLat = mapLocation.getLatitude();
-                                    double mapLon = mapLocation.getLongitude();
-
-                                    LatLng markerLocation = markerUpdated.getPosition();
-                                    double markerLat = markerLocation.getLatitude();
-                                    double markerLon = markerLocation.getLongitude();
-
-                                    //affiche les snippets si les marker sont a cote du centre de la carte
-                                    //calcul la distance entre les points
-                                    float [] dist={1000};
-                                    Location.distanceBetween(markerLat, markerLon, mapLat, mapLon, dist) ;
-
-
-                                    if(dist[0]<500)
+                                if(latSouth<lat && lat<latNorth && lonWest<lon && lon<lonEast)//marche pas dans l'hemisphere sud
+                                {
+                                    if(zoom>14)
                                     {
+                                        drawable=null;
+                                        Bitmap bitmap = writeOnDrawable(R.drawable.ic_room_black_24dp, dataList.get(i));
+                                        drawable = new BitmapDrawable(getResources(), bitmap);
 
-                                        markerUpdate=markerUpdated;
-                                        new StationUpdate().execute();
+                                        drawable = resizeDrawable(drawable, width, height);
+
+                                        Log.v("ZOOM drawable2", String.valueOf(drawable.getIntrinsicWidth()) + " " + String.valueOf(drawable.getIntrinsicHeight())+" " +dataList.get(i));
+
+                                        //icon =new StationUpdate().execute(String.valueOf(i));
+
+                                        //redefinie l'icon
+                                        icon = iconFactory.fromDrawable(drawable);
 
                                     }
+                                    else
+                                    {
+                                        icon = iconSrc;
+                                    }
+
+                                    markerUpdated.setIcon(icon);
+                                    mapboxMap.addMarker(markerUpdated);
+                                    //markerUpdated.setTopOffsetPixels(-drawable.getIntrinsicHeight()/2);
                                 }
-                                if(zoom<14) {
-                                    markerUpdated.hideInfoWindow();
-                                }
+
+
 
                             }
 
                         }
-                        else
-                        {
-                            for (int i = 0; i < markerList.size(); i++) {
 
-                                Marker markerOld = markerList.get(i);
-                                markerOld.remove();
-                                Log.v("ZOOM", "remove marker");
-
-                            }
-                        }
 
 
 
@@ -245,18 +285,18 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
     }
 
 
-    public class StationUpdate extends AsyncTask<Void, Void, String>
+    public class StationUpdate extends AsyncTask<String, Void, String[]>
     {
 
 
         @Override
-        protected String doInBackground(Void... args) {
+        protected String[] doInBackground(String... idx) {
 
 
 
             //String formated in Json containing the query
             String stationUpdateJson="";
-            String station_number=markerUpdate.getTitle();
+            String station_number=markerList.get(Integer.parseInt(String.valueOf(idx))).getTitle();
             String snippetStr="";
 
             // These two need to be declared outside the try/catch
@@ -370,8 +410,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
 
 
-                snippetStr=" Bikes \\ Stands\n"+
-                        "   "+ String.valueOf(availableBikes) +  "          " + String.valueOf(availableStands);
+                snippetStr= String.valueOf(availableBikes) +  "/" + String.valueOf(availableStands);
 
 
 
@@ -384,11 +423,11 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
 
 
-            return snippetStr;
+            return new String[]{String.valueOf(idx), snippetStr};
         }
 
         @Override
-        protected void onPostExecute(String snippetStr)
+        protected void onPostExecute(String[] strBg)
         {
             markerUpdate.setSnippet(snippetStr);
 
@@ -507,6 +546,13 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 else
                 {markerList.clear();}
 
+                if( dataList==null){}
+                else
+                {dataList.clear();}
+
+                final String ODP_available_stands = "available_bike_stands";
+                final String ODP_available_bikes = "available_bikes";
+
                 for (int i = 0; i < stationArray.length(); i++) {
 
 
@@ -517,7 +563,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
                     stationNumber = stationFields.getInt(ODP_number);
 
-                    //int availableStands = stationFields.getInt(ODP_available_stands);
+                    int availableStands = stationFields.getInt(ODP_available_stands);
+                    int availableBikes = stationFields.getInt(ODP_available_bikes);
+
                     //String stationStatus = stationFields.getString(ODP_status);
 
                     JSONArray coordinateObject = stationGeometry.getJSONArray(ODP_coordinates);
@@ -533,22 +581,24 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                     IconFactory iconFactory = IconFactory.getInstance(getContext());
 
 
-                    Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_room_black_24dp);
+                    //Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_room_black_24dp);
 
-                    drawable=resizeDrawable(drawable,2,2);
+                    Drawable drawable=resizeDrawable(drawableSrc, 2, 2);
                     Icon icon= iconFactory.fromDrawable(drawable);
 
 
-                    Marker markerTmp = mapboxMap.addMarker(new MarkerOptions()
-                                    .setIcon(icon)
-                                    .position(position)
-                                    .title(String.valueOf(stationNumber))
-                                    .snippet("Open : ..." +
-                                            "\n Bikes : ..." +
-                                            "\n Stands : ...")
-                    );
+                    MarkerOptions markerOptions=new MarkerOptions()
+                            .setIcon(icon)
+                            .position(position)
+                            .title(String.valueOf(stationNumber))
+                            .snippet("Open : ..." +
+                                    "\n Bikes : ..." +
+                                    "\n Stands : ...");
 
-                    markerList.add(markerTmp);
+                    mapboxMap.addMarker(markerOptions);
+
+                    dataList.add(availableStands+"/"+availableBikes);
+                    markerList.add(markerOptions);
 
                 }
 
@@ -572,7 +622,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
     public Bitmap writeOnDrawable(int drawableId, String text){
 
         Bitmap bm = BitmapFactory.decodeResource(getResources(), drawableId).copy(Bitmap.Config.ARGB_8888, true);
-        Bitmap bitmap=Bitmap.createBitmap(bm.getWidth()*2,bm.getHeight()*2,Bitmap.Config.ARGB_8888);
 
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStyle(Paint.Style.FILL);
@@ -583,13 +632,19 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
         Rect bounds = new Rect();
         paint.getTextBounds(text, 0, text.length(), bounds);
+
+        Rect boundsRef = new Rect();
+        paint.getTextBounds("99/99", 0, "99/99".length(), boundsRef);
+
+        Bitmap bitmap=Bitmap.createBitmap(max(boundsRef.width(),bm.getWidth()),boundsRef.height()+bm.getHeight(),Bitmap.Config.ARGB_8888);
+
         int x = bitmap.getWidth()/2;
-        int y = bitmap.getHeight()/2;
+        int y = boundsRef.height();
 
 
         Canvas canvas = new Canvas(bitmap);
         canvas.drawText(text, x, y, paint);
-        canvas.drawBitmap(bm,bitmap.getWidth()/4,bitmap.getHeight()/2,null);
+        canvas.drawBitmap(bm,bitmap.getWidth()/2-bm.getWidth()/2,boundsRef.height(),null);
 
         return bitmap;
     }

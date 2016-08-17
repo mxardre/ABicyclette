@@ -10,5 +10,6 @@
         android:layout_height="match_parent"
         mapbox:access_token="@string/accessToken"/>
 
+
 </FrameLayout>
 
