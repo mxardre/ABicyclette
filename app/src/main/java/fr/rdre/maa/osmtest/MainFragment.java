@@ -75,7 +75,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
         Bitmap bitmap = writeOnDrawable(R.drawable.ic_room_black_24dp, " ");
         drawableSrc=new BitmapDrawable(getResources(), bitmap);
-        Log.v("ZOOM src", String.valueOf(drawableSrc.getIntrinsicWidth())+" "+String.valueOf(drawableSrc.getIntrinsicHeight()));
+        Log.v("ZOOM src", String.valueOf(drawableSrc.getIntrinsicWidth()) + " " + String.valueOf(drawableSrc.getIntrinsicHeight()));
 
         //Context context = getContext();
         //Toast.makeText(context, "VelibMarker", Toast.LENGTH_SHORT).show();
@@ -103,6 +103,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
 
         // Load Marker
+
         new StationPosition().execute();
 
         // Put listener on marker
@@ -111,7 +112,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             public boolean onMarkerClick(@NonNull Marker marker) {
 
                 Log.v("Listener", "STATION NUMBER " + marker.getTitle());
-                markerUpdate=marker;
+                markerUpdate = marker;
 
                 new StationUpdate().execute();
 
@@ -128,21 +129,19 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             public void onCameraChange(CameraPosition position) {
 
 
-                if (target==null)
-                {
-                    target=position.target;
+                if (target == null) {
+                    target = position.target;
                 }
 
 
-                double targetLat=target.getLatitude();
-                double targetLon=target.getLongitude();
+                double targetLat = target.getLatitude();
+                double targetLon = target.getLongitude();
 
-                if (zoom * 0.99 > position.zoom || position.zoom > zoom * 1.01 || targetLat*0.9999>position.target.getLatitude() || position.target.getLatitude()>targetLat*1.0001 || targetLon*0.9999>position.target.getLongitude() || position.target.getLongitude()>targetLon*1.0001 )
-                {
-                    Log.v("TARGET", String.valueOf(targetLat)+" "+String.valueOf(targetLon)+" "+String.valueOf(position.target.getLatitude())+" "+String.valueOf(position.target.getLongitude()));
+                if (zoom * 0.99 > position.zoom || position.zoom > zoom * 1.01 || targetLat * 0.9999 > position.target.getLatitude() || position.target.getLatitude() > targetLat * 1.0001 || targetLon * 0.9999 > position.target.getLongitude() || position.target.getLongitude() > targetLon * 1.0001) {
+                    Log.v("TARGET", String.valueOf(targetLat) + " " + String.valueOf(targetLon) + " " + String.valueOf(position.target.getLatitude()) + " " + String.valueOf(position.target.getLongitude()));
 
                     zoom = position.zoom;
-                    target=position.target;
+                    target = position.target;
                     if (markerList.size() > 0) {
 
                         //get the actual marker
@@ -153,34 +152,31 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                         //Bitmap bitmap= writeOnDrawable(R.drawable.ic_room_black_24dp,"Bikes");
                         //Drawable drawable= new BitmapDrawable(getResources(),bitmap);
 
-                        int width= (int) (drawableSrc.getIntrinsicWidth() * (zoom-10)*.22);
-                        int height= (int) (drawableSrc.getIntrinsicHeight() * (zoom-10)*.22);
+                        int width = (int) (drawableSrc.getIntrinsicWidth() * (zoom - 10) * .22);
+                        int height = (int) (drawableSrc.getIntrinsicHeight() * (zoom - 10) * .22);
 
 
-                        Log.v("ZOOM icon", String.valueOf(width)+" "+String.valueOf(height));
+                        Log.v("ZOOM icon", String.valueOf(width) + " " + String.valueOf(height));
 
                         //Log.v("ZOOM drawable1", String.valueOf(drawable.getIntrinsicWidth())+" "+String.valueOf(drawable.getIntrinsicHeight()));
 
-                        if (width>0 && height>0)
-                        {
+                        if (width > 0 && height > 0) {
 
-                            if(width>180)
-                            {
-                                width=180;
+                            if (width > 180) {
+                                width = 180;
                             }
-                            if(height>155)
-                            {
-                                height=155;
+                            if (height > 155) {
+                                height = 155;
                             }
 
                             Log.v("ZOOM", String.valueOf(zoom) + " " + String.valueOf((zoom - 10) * .2));
                             Log.v("ZOOM markerList", String.valueOf(markerList.size()));
 
 
-                            Drawable drawable=resizeDrawable(drawableSrc, width, height);
+                            Drawable drawable = resizeDrawable(drawableSrc, width, height);
                             IconFactory iconFactory = IconFactory.getInstance(getContext());
-                            Icon iconSrc= iconFactory.fromDrawable(drawable);
-                            Icon icon=iconSrc;
+                            Icon iconSrc = iconFactory.fromDrawable(drawable);
+                            Icon icon = iconSrc;
 
                             //Bitmap scale=Bitmap.createScaledBitmap(bitmap, width , height, true);
                             //ScaleDrawable scaledrawable = new ScaleDrawable(drawable, 0, width, height);
@@ -190,44 +186,46 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
 
                             //icon = iconFactory.fromBitmap(bhalfsize);
-                            VisibleRegion visibleRegion= mapboxMap.getProjection().getVisibleRegion();
-                            double latNorth=visibleRegion.latLngBounds.getLatNorth();
-                            double latSouth=visibleRegion.latLngBounds.getLatSouth();
-                            double lonWest=visibleRegion.latLngBounds.getLonWest();
-                            double lonEast=visibleRegion.latLngBounds.getLonEast();
+                            VisibleRegion visibleRegion = mapboxMap.getProjection().getVisibleRegion();
+                            double latNorth = visibleRegion.latLngBounds.getLatNorth();
+                            double latSouth = visibleRegion.latLngBounds.getLatSouth();
+                            double lonWest = visibleRegion.latLngBounds.getLonWest();
+                            double lonEast = visibleRegion.latLngBounds.getLonEast();
 
 
                             for (int i = 0; i < markerList.size(); i++) {
 
                                 MarkerOptions markerUpdated = markerList.get(i);
 
-                                double lat= markerUpdated.getPosition().getLatitude();
-                                double lon= markerUpdated.getPosition().getLongitude();
+                                double lat = markerUpdated.getPosition().getLatitude();
+                                double lon = markerUpdated.getPosition().getLongitude();
 
-                                //mapboxMap.removeMarker(markerUpdated.getMarker());
+//                                mapboxMap.removeMarker(markerUpdated.getMarker());
 
                                 markerUpdated.getMarker().remove();
 
-                                if(latSouth<lat && lat<latNorth && lonWest<lon && lon<lonEast)//marche pas dans l'hemisphere sud
+                                if (latSouth < lat && lat < latNorth && lonWest < lon && lon < lonEast)//marche pas dans l'hemisphere sud
                                 {
-                                    if(zoom>14)
+                                    if(i==0)
                                     {
-                                        drawable=null;
+                                        StationUpdate stationUpdate= new StationUpdate();
+                                        stationUpdate.execute();
+                                    }
+                                    if (zoom > 14) {
+                                        drawable = null;
                                         Bitmap bitmap = writeOnDrawable(R.drawable.ic_room_black_24dp, dataList.get(i));
                                         drawable = new BitmapDrawable(getResources(), bitmap);
 
                                         drawable = resizeDrawable(drawable, width, height);
 
-                                        Log.v("ZOOM drawable2", String.valueOf(drawable.getIntrinsicWidth()) + " " + String.valueOf(drawable.getIntrinsicHeight())+" " +dataList.get(i));
+                                        Log.v("ZOOM drawable2", String.valueOf(drawable.getIntrinsicWidth()) + " " + String.valueOf(drawable.getIntrinsicHeight()) + " " + dataList.get(i));
 
                                         //icon =new StationUpdate().execute(String.valueOf(i));
 
                                         //redefinie l'icon
                                         icon = iconFactory.fromDrawable(drawable);
 
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         icon = iconSrc;
                                     }
 
@@ -237,12 +235,9 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                                 }
 
 
-
                             }
 
                         }
-
-
 
 
                     }
@@ -285,43 +280,31 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
     }
 
 
-    public class StationUpdate extends AsyncTask<String, Void, String[]>
-    {
+    public class StationUpdate extends AsyncTask<Void, Void, String> {
 
 
         @Override
-        protected String[] doInBackground(String... idx) {
+        protected String doInBackground(Void... params) {
 
+            String LOG_TAG = "ASYNC TASK";
 
-
-            //String formated in Json containing the query
-            String stationUpdateJson="";
-            String station_number=markerList.get(Integer.parseInt(String.valueOf(idx))).getTitle();
-            String snippetStr="";
 
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
 
-            String LOG_TAG = "ASYNC TASK 2";
-
-
-            Log.v(LOG_TAG, "STATION NUMBER " +station_number);
-
+            // Will contain the raw JSON response as a string.
+            String stationJsonStr;
 
             try {
                 // Construct the URL for the ABicylette query
-                // The data are refresh in real time
-                String VELIB_BASE_URL = "http://public.opendatasoft.com/api/records/1.0/search/?dataset=jcdecaux_bike_data&facet=banking&facet=bonus&facet=status&facet=contract_name&refine.contract_name=Paris";
-                VELIB_BASE_URL = VELIB_BASE_URL +  "&refine.number=" + station_number;
-
+                // The data are refresh every minute in this api. To get live data use jcdecaux developper api
+                final String VELIB_BASE_URL = "http://opendata.paris.fr/api/records/1.0/search/?dataset=stations-velib-disponibilites-en-temps-reel&rows=2000&start=1&sort=-number&facet=banking&facet=bonus&facet=status&facet=contract_name";
                 Uri builtUri = Uri.parse(VELIB_BASE_URL).buildUpon().build();
 
                 URL url = new URL(builtUri.toString());
-
-
-                Log.v(LOG_TAG, "Built URI 2 " + builtUri.toString());
+                Log.v(LOG_TAG, "Built URI " + builtUri.toString());
 
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
@@ -350,8 +333,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                     // Stream was empty.  No point in parsing.
                     return null;
                 }
-                stationUpdateJson = buffer.toString();
-                Log.v(LOG_TAG, "OPEN_DATA_API: " + stationUpdateJson);
+                stationJsonStr = buffer.toString();
+                Log.v(LOG_TAG, "OPEN_DATA_API: " + stationJsonStr);
 
             } catch (IOException e) {
                 Log.e("Tag", "Error ", e);
@@ -372,67 +355,100 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
 
             }
 
+            // This will only happen if there was an error getting or parsing the position.
+            return stationJsonStr;
+        }
 
-            //update the marker in background to avoid the freezing of the app
+        @Override
+        protected void onPostExecute(String stationJsonStr) {
+
+
+            //add the marker in background to avoid the freezing of the app
 
             // These are the names of the JSON objects that need to be extracted.
             final String ODP_records = "records";
+            final String ODP_geometry = "geometry";
+            final String ODP_coordinates = "coordinates";
             final String ODP_fields = "fields";
-            final String ODP_available_stands = "available_bike_stands";
-            final String ODP_available_bikes = "available_bikes";
-            final String ODP_status = "status";
+            final String ODP_number = "number";
 
 
             JSONObject stationJson = null;
             JSONArray stationArray = null;
 
-            Log.v("EXECUTE 2", "before try");
+            Log.v("EXECUTE", "before try");
 
             try {
-                stationJson = new JSONObject(stationUpdateJson);
-
+                stationJson = new JSONObject(stationJsonStr);
                 stationArray = stationJson.getJSONArray(ODP_records);
 
-
-                //Get JSON object of the station
-                JSONObject stationRecords = stationArray.getJSONObject(0);
-                JSONObject stationFields = stationRecords.getJSONObject(ODP_fields);
-
-
-                int availableBikes = stationFields.getInt(ODP_available_bikes);
-                int availableStands = stationFields.getInt(ODP_available_stands);
-                String stationStatus = stationFields.getString(ODP_status);
-
-                Log.v("EXECUTE 2", "SNIPPET " +
-                        " Bikes : Stands\n"+ String.valueOf(availableBikes) +
-                        "  " + String.valueOf(availableStands));
+                double lat = 0;
+                double lon = 0;
+                int stationNumber = 0;
 
 
+                final String ODP_available_stands = "available_bike_stands";
+                final String ODP_available_bikes = "available_bikes";
+
+                for (int i = 0; i < stationArray.length(); i++) {
 
 
-                snippetStr= String.valueOf(availableBikes) +  "/" + String.valueOf(availableStands);
+                    //Get JSON object of the station
+                    JSONObject stationRecords = stationArray.getJSONObject(i);
+                    JSONObject stationGeometry = stationRecords.getJSONObject(ODP_geometry);
+                    JSONObject stationFields = stationRecords.getJSONObject(ODP_fields);
+
+                    stationNumber = stationFields.getInt(ODP_number);
+
+                    int availableStands = stationFields.getInt(ODP_available_stands);
+                    int availableBikes = stationFields.getInt(ODP_available_bikes);
+
+                    //String stationStatus = stationFields.getString(ODP_status);
+
+                    JSONArray coordinateObject = stationGeometry.getJSONArray(ODP_coordinates);
+
+                    lat = coordinateObject.getDouble(0);
+                    lon = coordinateObject.getDouble(1);
 
 
 
+                    LatLng position = new LatLng(lon, lat);
+
+                    // Create an Icon object for the marker to use
+                    IconFactory iconFactory = IconFactory.getInstance(getContext());
+
+
+                    //Drawable drawable= ContextCompat.getDrawable(getContext(), R.drawable.ic_room_black_24dp);
+
+                    Drawable drawable=resizeDrawable(drawableSrc, 2, 2);
+                    Icon icon= iconFactory.fromDrawable(drawable);
+
+
+                    MarkerOptions markerOptions=new MarkerOptions()
+                            .setIcon(icon)
+                            .position(position)
+                            .title(String.valueOf(stationNumber))
+                            .snippet("Open : ..." +
+                                    "\n Bikes : ..." +
+                                    "\n Stands : ...");
+
+
+
+                    Log.v("STATION UPDATE", String.valueOf(i) + " " + String.valueOf(dataList.size()) + " " + String.valueOf(markerList.size()));
+
+
+                    dataList.set(i, availableStands + "/" + availableBikes);
+
+
+                }
 
 
             } catch (JSONException e) {
-                Log.v("EXECUTE 2", "ERROR UPDATE SNIPPET");
                 e.printStackTrace();
             }
 
 
-
-            return new String[]{String.valueOf(idx), snippetStr};
         }
-
-        @Override
-        protected void onPostExecute(String[] strBg)
-        {
-            markerUpdate.setSnippet(snippetStr);
-
-        }
-
 
     }
 
