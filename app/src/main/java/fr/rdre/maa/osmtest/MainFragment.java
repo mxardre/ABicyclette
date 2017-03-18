@@ -1,5 +1,6 @@
 package fr.rdre.maa.osmtest;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -112,11 +113,18 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             public boolean onMarkerClick(@NonNull Marker marker) {
 
                 Log.v("Listener", "STATION NUMBER " + marker.getTitle());
-                markerUpdate = marker;
+
+
 
                 new StationUpdate().execute();
 
-                markerUpdate.showInfoWindow(mapboxMap, mapView);
+
+                Intent detailIntent=new Intent(getActivity(),PreferedActivity.class)
+                        .putExtra(Intent.EXTRA_TEXT,marker.getTitle());
+
+                startActivity(detailIntent);
+
+                //markerUpdate.showInfoWindow(mapboxMap, mapView);
 
                 return true;
             }
@@ -137,81 +145,87 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 double targetLat = target.getLatitude();
                 double targetLon = target.getLongitude();
 
+                Log.v("TARGET", String.valueOf(zoom));
+
                 if (zoom * 0.99 > position.zoom || position.zoom > zoom * 1.01 || targetLat * 0.9999 > position.target.getLatitude() || position.target.getLatitude() > targetLat * 1.0001 || targetLon * 0.9999 > position.target.getLongitude() || position.target.getLongitude() > targetLon * 1.0001) {
                     Log.v("TARGET", String.valueOf(targetLat) + " " + String.valueOf(targetLon) + " " + String.valueOf(position.target.getLatitude()) + " " + String.valueOf(position.target.getLongitude()));
 
+
+
                     zoom = position.zoom;
                     target = position.target;
-                    if (markerList.size() > 0) {
 
-                        //get the actual marker
+                    if(zoom>14) {
 
-                        // Create an Icon object for the marker to use
-                        //the icon displays the number of bike and the number stand available
+                        if (markerList.size() > 0) {
 
-                        //Bitmap bitmap= writeOnDrawable(R.drawable.ic_room_black_24dp,"Bikes");
-                        //Drawable drawable= new BitmapDrawable(getResources(),bitmap);
+                            //get the actual marker
 
-                        int width = (int) (drawableSrc.getIntrinsicWidth() * (zoom - 10) * .22);
-                        int height = (int) (drawableSrc.getIntrinsicHeight() * (zoom - 10) * .22);
+                            // Create an Icon object for the marker to use
+                            //the icon displays the number of bike and the number stand available
 
+                            //Bitmap bitmap= writeOnDrawable(R.drawable.ic_room_black_24dp,"Bikes");
+                            //Drawable drawable= new BitmapDrawable(getResources(),bitmap);
 
-                        Log.v("ZOOM icon", String.valueOf(width) + " " + String.valueOf(height));
-
-                        //Log.v("ZOOM drawable1", String.valueOf(drawable.getIntrinsicWidth())+" "+String.valueOf(drawable.getIntrinsicHeight()));
-
-                        if (width > 0 && height > 0) {
-
-                            if (width > 180) {
-                                width = 180;
-                            }
-                            if (height > 155) {
-                                height = 155;
-                            }
-
-                            Log.v("ZOOM", String.valueOf(zoom) + " " + String.valueOf((zoom - 10) * .2));
-                            Log.v("ZOOM markerList", String.valueOf(markerList.size()));
+                            int width = (int) (drawableSrc.getIntrinsicWidth() * (zoom - 10) * .22);
+                            int height = (int) (drawableSrc.getIntrinsicHeight() * (zoom - 10) * .22);
 
 
-                            Drawable drawable = resizeDrawable(drawableSrc, width, height);
-                            IconFactory iconFactory = IconFactory.getInstance(getContext());
-                            Icon iconSrc = iconFactory.fromDrawable(drawable);
-                            Icon icon = iconSrc;
+                            Log.v("ZOOM icon", String.valueOf(width) + " " + String.valueOf(height));
 
-                            //Bitmap scale=Bitmap.createScaledBitmap(bitmap, width , height, true);
-                            //ScaleDrawable scaledrawable = new ScaleDrawable(drawable, 0, width, height);
+                            //Log.v("ZOOM drawable1", String.valueOf(drawable.getIntrinsicWidth())+" "+String.valueOf(drawable.getIntrinsicHeight()));
 
+                            if (width > 0 && height > 0) {
 
-                            //Drawable d = new BitmapDrawable(getResources(), scaledrawable);
+                                if (width > 180) {
+                                    width = 180;
+                                }
+                                if (height > 155) {
+                                    height = 155;
+                                }
 
-
-                            //icon = iconFactory.fromBitmap(bhalfsize);
-                            VisibleRegion visibleRegion = mapboxMap.getProjection().getVisibleRegion();
-                            double latNorth = visibleRegion.latLngBounds.getLatNorth();
-                            double latSouth = visibleRegion.latLngBounds.getLatSouth();
-                            double lonWest = visibleRegion.latLngBounds.getLonWest();
-                            double lonEast = visibleRegion.latLngBounds.getLonEast();
+                                Log.v("ZOOM", String.valueOf(zoom) + " " + String.valueOf((zoom - 10) * .2));
+                                Log.v("ZOOM markerList", String.valueOf(markerList.size()));
 
 
-                            for (int i = 0; i < markerList.size(); i++) {
+                                Drawable drawable = resizeDrawable(drawableSrc, width, height);
+                                IconFactory iconFactory = IconFactory.getInstance(getContext());
+                                Icon iconSrc = iconFactory.fromDrawable(drawable);
+                                Icon icon = iconSrc;
 
-                                MarkerOptions markerUpdated = markerList.get(i);
+                                //Bitmap scale=Bitmap.createScaledBitmap(bitmap, width , height, true);
+                                //ScaleDrawable scaledrawable = new ScaleDrawable(drawable, 0, width, height);
 
-                                double lat = markerUpdated.getPosition().getLatitude();
-                                double lon = markerUpdated.getPosition().getLongitude();
+
+                                //Drawable d = new BitmapDrawable(getResources(), scaledrawable);
+
+
+                                //icon = iconFactory.fromBitmap(bhalfsize);
+                                VisibleRegion visibleRegion = mapboxMap.getProjection().getVisibleRegion();
+                                double latNorth = visibleRegion.latLngBounds.getLatNorth();
+                                double latSouth = visibleRegion.latLngBounds.getLatSouth();
+                                double lonWest = visibleRegion.latLngBounds.getLonWest();
+                                double lonEast = visibleRegion.latLngBounds.getLonEast();
+
+
+                                for (int i = 0; i < markerList.size(); i++) {
+
+                                    MarkerOptions markerUpdated = markerList.get(i);
+
+                                    double lat = markerUpdated.getPosition().getLatitude();
+                                    double lon = markerUpdated.getPosition().getLongitude();
 
 //                                mapboxMap.removeMarker(markerUpdated.getMarker());
 
-                                markerUpdated.getMarker().remove();
+                                    markerUpdated.getMarker().remove(); //enleve les marker et n'ecrit que ceux qui sont dans la region visible
 
-                                if (latSouth < lat && lat < latNorth && lonWest < lon && lon < lonEast)//marche pas dans l'hemisphere sud
-                                {
-                                    if(i==0)
+                                    if (latSouth < lat && lat < latNorth && lonWest < lon && lon < lonEast)//marche pas dans l'hemisphere sud
                                     {
-                                        StationUpdate stationUpdate= new StationUpdate();
-                                        stationUpdate.execute();
-                                    }
-                                    if (zoom > 14) {
+                                        if (i == 0) {
+                                            StationUpdate stationUpdate = new StationUpdate();
+                                            stationUpdate.execute();
+                                        }
+
                                         drawable = null;
                                         Bitmap bitmap = writeOnDrawable(R.drawable.ic_room_black_24dp, dataList.get(i));
                                         drawable = new BitmapDrawable(getResources(), bitmap);
@@ -225,22 +239,32 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                                         //redefinie l'icon
                                         icon = iconFactory.fromDrawable(drawable);
 
-                                    } else {
-                                        icon = iconSrc;
+
+                                        markerUpdated.setIcon(icon);
+                                        mapboxMap.addMarker(markerUpdated);
+                                        //markerUpdated.setTopOffsetPixels(-drawable.getIntrinsicHeight()/2);
                                     }
 
-                                    markerUpdated.setIcon(icon);
-                                    mapboxMap.addMarker(markerUpdated);
-                                    //markerUpdated.setTopOffsetPixels(-drawable.getIntrinsicHeight()/2);
-                                }
 
+                                }
 
                             }
 
+
                         }
-
-
                     }
+                    else
+                    {
+                        if (markerList.size() > 0) {
+                            for (int i = 0; i < markerList.size(); i++) {
+
+                                MarkerOptions markerUpdated = markerList.get(i);
+
+                                markerUpdated.getMarker().remove(); //enleve les marker si le zoom est trop loin
+                            }
+                        }
+                    }
+
                 }
             }
         });

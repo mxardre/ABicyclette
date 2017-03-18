@@ -1,7 +1,6 @@
 package fr.rdre.maa.osmtest;
 
-import android.content.Context;
-import android.net.Uri;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -15,14 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link PreferedFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link PreferedFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+
 public class PreferedFragment extends Fragment {
 
     private ArrayAdapter<String> mListStationAdapter;
@@ -45,11 +37,23 @@ public class PreferedFragment extends Fragment {
         // Inflate the layout for this fragment
 
 
+        View rootView = inflater.inflate(R.layout.fragment_prefered, container, false);
+
+        Intent intent = getActivity().getIntent();
+
         //create a list containing the favorite station
         String[] data = {
                 "Station 1 Bikes :..., Stand :...",
                 "Station 2 Bikes :..., Stand :...",
         };
+
+        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
+            String title = intent.getStringExtra(Intent.EXTRA_TEXT);
+            //create a list containing the favorite station
+            data = new String[]{title};
+        }
+
+
 
         List<String> stationPrefered = new ArrayList<String>(Arrays.asList(data));
 
@@ -63,7 +67,6 @@ public class PreferedFragment extends Fragment {
                         R.id.list_item_station_textview, // The ID of the textview to populate.
                         stationPrefered);
 
-        View rootView = inflater.inflate(R.layout.fragment_prefered, container, false);
 
         // Get a reference to the ListView, and attach this adapter to it.
         ListView listView = (ListView) rootView.findViewById(R.id.listview_station);
